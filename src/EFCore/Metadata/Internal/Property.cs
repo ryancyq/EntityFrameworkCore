@@ -45,8 +45,9 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Internal
             [CanBeNull] FieldInfo fieldInfo,
             [NotNull] EntityType declaringEntityType,
             ConfigurationSource configurationSource,
-            ConfigurationSource? typeConfigurationSource)
-            : base(name, propertyInfo, fieldInfo)
+            ConfigurationSource? typeConfigurationSource,
+            bool isNonClrTypeBased = false)
+            : base(name, propertyInfo, fieldInfo, isNonClrTypeBased)
         {
             Check.NotNull(clrType, nameof(clrType));
             Check.NotNull(declaringEntityType, nameof(declaringEntityType));

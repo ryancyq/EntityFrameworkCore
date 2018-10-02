@@ -1596,7 +1596,8 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Internal
                 propertyType,
                 ClrType?.GetMembersInHierarchy(name).FirstOrDefault(),
                 configurationSource,
-                typeConfigurationSource);
+                typeConfigurationSource,
+                false);
         }
 
         /// <summary>
@@ -1621,7 +1622,36 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Internal
                         memberInfo.Name, this.DisplayName(), memberInfo.DeclaringType?.ShortDisplayName()));
             }
 
-            return AddProperty(memberInfo.Name, memberInfo.GetMemberType(), memberInfo, configurationSource, configurationSource);
+            return AddProperty(
+                memberInfo.Name,
+                memberInfo.GetMemberType(),
+                memberInfo,
+                configurationSource,
+                configurationSource,
+                false);
+        }
+
+
+        /// <summary>
+        ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
+        ///     directly from your code. This API may change or be removed in future releases.
+        /// </summary>
+        public virtual Property AddIndexedProperty(
+            [NotNull] string name,
+            [CanBeNull] Type propertyType = null,
+            // ReSharper disable once MethodOverloadWithOptionalParameter
+            ConfigurationSource configurationSource = ConfigurationSource.Explicit,
+            ConfigurationSource? typeConfigurationSource = ConfigurationSource.Explicit)
+        {
+            Check.NotNull(name, nameof(name));
+
+            return AddProperty(
+                name,
+                propertyType,
+                null,
+                configurationSource,
+                typeConfigurationSource,
+                true);
         }
 
         private Property AddProperty(
@@ -1629,7 +1659,8 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Internal
             Type propertyType,
             MemberInfo memberInfo,
             ConfigurationSource configurationSource,
-            ConfigurationSource? typeConfigurationSource)
+            ConfigurationSource? typeConfigurationSource,
+            bool isNonClrTypeBased)
         {
             var conflictingMember = FindMembersInHierarchy(name).FirstOrDefault();
             if (conflictingMember != null)
@@ -1666,7 +1697,7 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Internal
 
             var property = new Property(
                 name, propertyType, memberInfo as PropertyInfo, memberInfo as FieldInfo, this,
-                configurationSource, typeConfigurationSource);
+                configurationSource, typeConfigurationSource, isNonClrTypeBased);
 
             _properties.Add(property.Name, property);
             PropertyMetadataChanged();
@@ -2224,6 +2255,8 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Internal
             => RemoveIndex(properties);
 
         IMutableProperty IMutableEntityType.AddProperty(string name, Type propertyType) => AddProperty(name, propertyType);
+
+        IMutableProperty IMutableEntityType.AddIndexedProperty(string name, Type propertyType) => AddIndexedProperty(name, propertyType);
 
         [DebuggerStepThrough]
         IProperty IEntityType.FindProperty(string name) => FindProperty(name);
